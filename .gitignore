@@ -1,0 +1,7 @@
+.env
+*.exe
+*.test
+/tmp/
+/bin/
+vendor/
+docker/mysql/init/*.sql
