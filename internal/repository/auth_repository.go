@@ -52,7 +52,6 @@ func (r *AuthRepository) FindByUsername(Username string) (*model.User, error) {
 			&user.Email,
 			&user.Password,
 			&user.EmailVerified,
-			//&user.VerificationToken,
 		)
 
 	if err != nil {
@@ -102,4 +101,47 @@ func (r *AuthRepository) CreateOTP(
 	)
 
 	return err
+}
+
+func (r *AuthRepository) VerifyOTP(
+	userID int64,
+	otp string,
+) (bool, error) {
+
+	query := `
+	SELECT id
+	FROM otp_user
+	WHERE user_id = ?
+	AND otp_code = ?
+	AND is_used = FALSE
+	AND expired_at > NOW()
+	ORDER BY id DESC
+	LIMIT 1
+	`
+
+	var otpID int64
+
+	err := r.DB.QueryRow(
+		query,
+		userID,
+		otp,
+	).Scan(&otpID)
+
+	if err != nil {
+		return false, err
+	}
+
+	updateQuery := `
+	UPDATE otp_user
+	SET is_used = TRUE
+	WHERE id = ?
+	`
+
+	_, err = r.DB.Exec(updateQuery, otpID)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

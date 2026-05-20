@@ -60,4 +60,44 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "login success",
 	})
+
+}
+func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
+
+	token := c.Query("token")
+
+	err := h.Service.VerifyEmail(token)
+
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "email verified",
+	})
+}
+
+func (h *AuthHandler) VerifyOTP(c *fiber.Ctx) error {
+
+	var req auth.VerifyOTPRequest
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": "invalid request body",
+		})
+	}
+
+	err := h.Service.VerifyOTP(req)
+
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "otp verified",
+	})
 }

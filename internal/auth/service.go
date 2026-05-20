@@ -73,6 +73,18 @@ func (s *Service) Login(req LoginRequest) error {
 	if err != nil {
 		return errors.New("username not found")
 	}
+
+	// cek password dulu
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(req.Password),
+	)
+
+	if err != nil {
+		return errors.New("wrong password")
+	}
+
+	// baru OTP
 	if user.EmailVerified {
 
 		otp := GenerateOTP()
@@ -98,14 +110,6 @@ func (s *Service) Login(req LoginRequest) error {
 
 		return errors.New("otp sent to email")
 	}
-	err = bcrypt.CompareHashAndPassword(
-		[]byte(user.Password),
-		[]byte(req.Password),
-	)
-
-	if err != nil {
-		return errors.New("wrong password")
-	}
 
 	return nil
 }
@@ -118,4 +122,28 @@ func GenerateOTP() string {
 	rand.Seed(time.Now().UnixNano())
 
 	return fmt.Sprintf("%06d", rand.Intn(1000000))
+}
+
+func (s *Service) VerifyOTP(
+	req VerifyOTPRequest,
+) error {
+
+	user, err := s.Repo.FindByUsername(
+		req.Username,
+	)
+
+	if err != nil {
+		return errors.New("username not found")
+	}
+
+	valid, err := s.Repo.VerifyOTP(
+		user.ID,
+		req.OTP,
+	)
+
+	if err != nil || !valid {
+		return errors.New("invalid otp")
+	}
+
+	return nil
 }

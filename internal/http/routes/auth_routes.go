@@ -15,4 +15,6 @@ func AuthRoutes(
 
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+	auth.Get("/verify", authHandler.VerifyEmail)
+	auth.Post("/verify-otp", authHandler.VerifyOTP)
 }
