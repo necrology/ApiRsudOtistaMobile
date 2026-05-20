@@ -10,6 +10,7 @@ import (
 type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
+	SMTP     SMTPConfig
 }
 
 type AppConfig struct {
@@ -26,6 +27,13 @@ type DatabaseConfig struct {
 	Name     string
 }
 
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	Email    string
+	Password string
+}
+
 func Load() Config {
 	_ = godotenv.Load()
 
@@ -33,14 +41,20 @@ func Load() Config {
 		App: AppConfig{
 			Name: env("APP_NAME", "ApiRsudOtistaMobile"),
 			Env:  env("APP_ENV", "development"),
-			Port: env("APP_PORT", "8080"),
+			Port: env("APP_PORT", "8081"),
 		},
 		Database: DatabaseConfig{
 			Host:     env("DB_HOST", "127.0.0.1"),
-			Port:     env("DB_PORT", "3306"),
+			Port:     env("DB_PORT", "3307"),
 			User:     env("DB_USER", "root"),
-			Password: env("DB_PASSWORD", ""),
-			Name:     env("DB_NAME", "apirusdotistamobile"),
+			Password: env("DB_PASSWORD", "qwerty@123"),
+			Name:     env("DB_NAME", "rsud_otista"),
+		},
+		SMTP: SMTPConfig{
+			Host:     env("SMTP_HOST", ""),
+			Port:     env("SMTP_PORT", ""),
+			Email:    env("SMTP_EMAIL", ""),
+			Password: env("SMTP_PASSWORD", ""),
 		},
 	}
 }

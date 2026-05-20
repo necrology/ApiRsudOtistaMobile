@@ -25,7 +25,7 @@ func New(cfg config.Config, db *sql.DB) *fiber.App {
 		Format: "${time} ${status} - ${latency} ${method} ${path}\n",
 	}))
 
-	routes.Register(app, db, cfg.Database.Name)
+	routes.Register(app, db, cfg)
 
 	app.Use(func(c *fiber.Ctx) error {
 		return response.Error(c, fiber.StatusNotFound, "route not found")
