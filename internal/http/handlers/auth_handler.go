@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"apirusdotistamobile/internal/auth"
+	"apirusdotistamobile/internal/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +19,7 @@ func NewAuthHandler(service *auth.Service) *AuthHandler {
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
-	var req auth.RegisterRequest
+	var req model.RegisterRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -26,12 +27,66 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	err := h.Service.Register(req)
+	err := h.Service.RegisterUser(req)
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
 		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "otp terkirim ke email, silahkan cek email untuk verifikasi",
+	})
+}
+
+func (h *AuthHandler) VerifyOTPNewUser(c *fiber.Ctx) error {
+
+	var req model.VerifyOTPNewUser
+
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": "invalid request body",
+		})
+	}
+
+	err := h.Service.VerifyOTPNewUser(req)
+
+	if err != nil {
+		return c.Status(401).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Register otp verified",
+	})
+}
+
+func (h *AuthHandler) SetPassword(
+	c *fiber.Ctx,
+) error {
+
+	var req model.SetPasswordRequest
+
+	if err := c.BodyParser(&req); err != nil {
+
+		return c.Status(400).JSON(
+			fiber.Map{
+				"message": "invalid request body",
+			},
+		)
+	}
+
+	err := h.Service.SetPassword(req)
+
+	if err != nil {
+
+		return c.Status(400).JSON(
+			fiber.Map{
+				"message": err.Error(),
+			},
+		)
 	}
 
 	return c.JSON(fiber.Map{
@@ -41,7 +96,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
-	var req auth.LoginRequest
+	var req model.LoginRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -79,9 +134,9 @@ func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) VerifyOTP(c *fiber.Ctx) error {
+func (h *AuthHandler) VerifyOTPLogin(c *fiber.Ctx) error {
 
-	var req auth.VerifyOTPRequest
+	var req model.VerifyOTPRequestLogin
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -89,7 +144,7 @@ func (h *AuthHandler) VerifyOTP(c *fiber.Ctx) error {
 		})
 	}
 
-	err := h.Service.VerifyOTP(req)
+	err := h.Service.VerifyOTPLogin(req)
 
 	if err != nil {
 		return c.Status(401).JSON(fiber.Map{

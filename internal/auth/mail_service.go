@@ -14,10 +14,6 @@ func SendOTPEmail(
 	otp string,
 ) error {
 
-	fmt.Println("SMTP HOST:", cfg.Host)
-	fmt.Println("SMTP PORT:", cfg.Port)
-	fmt.Println("SMTP EMAIL:", cfg.Email)
-
 	m := gomail.NewMessage()
 
 	m.SetHeader("From", cfg.Email)

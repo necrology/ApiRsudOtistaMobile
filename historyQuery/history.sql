@@ -33,7 +33,7 @@ CREATE TABLE user (
     ON UPDATE CURRENT_TIMESTAMP
 );
 
---tambah table otp_user
+--tambah table otp_user_login
 CREATE TABLE otp_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -50,4 +50,21 @@ CREATE TABLE otp_user (
     FOREIGN KEY (user_id)
     REFERENCES user(id)
     ON DELETE CASCADE
+);
+
+--tambah table otp_verif_email
+CREATE TABLE otp_verif_email (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    username VARCHAR(100) NOT NULL,
+
+    email VARCHAR(100) NOT NULL,
+
+    otp_code VARCHAR(10) NOT NULL,
+
+    expired_at TIMESTAMP NOT NULL,
+
+    is_used BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

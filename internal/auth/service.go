@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,19 +30,98 @@ func NewService(
 	}
 }
 
-func (s *Service) Register(req RegisterRequest) error {
+func (s *Service) RegisterUser(
+	req model.RegisterRequest,
+) error {
 
 	if req.Username == "" ||
-		req.Email == "" ||
-		req.Password == "" {
+		req.Email == "" {
 
-		return errors.New("Username, email, and password are required")
+		return errors.New(
+			"username and email are required",
+		)
 	}
 
-	existingUser, _ := s.Repo.FindByUsername(req.Username)
+	existingUser, _ := s.Repo.FindByUsername(
+		req.Username,
+	)
 
 	if existingUser != nil {
-		return errors.New("username already exists")
+		return errors.New(
+			"username already exists",
+		)
+	}
+	existingEmail, _ := s.Repo.FindByEmailNewUser(
+		req.Email,
+	)
+
+	if existingEmail != nil {
+		return errors.New(
+			"email already exists",
+		)
+	}
+
+	otp := GenerateOTP()
+
+	err := s.Repo.CreateVerifEmail(
+		model.User{
+			Username: req.Username,
+			Email:    req.Email,
+		},
+		otp,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	err = SendOTPEmail(
+		s.SMTP,
+		req.Email,
+		otp,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) VerifyOTPNewUser(
+	req model.VerifyOTPNewUser,
+) error {
+
+	user, err := s.Repo.FindByEmailNewUser(
+		req.Email,
+	)
+
+	if err != nil {
+		return errors.New("Email not found")
+	}
+
+	valid, err := s.Repo.VerifyOTPNewUser(
+		user.Email,
+		req.OTP,
+	)
+
+	if err != nil || !valid {
+		return errors.New("invalid otp")
+	}
+
+	return nil
+}
+
+func (s *Service) SetPassword(
+	req model.SetPasswordRequest,
+) error {
+
+	data, err := s.Repo.FindVerifiedEmail(
+		req.Email,
+	)
+
+	if err != nil {
+		return errors.New("email not verified")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword(
@@ -55,18 +133,16 @@ func (s *Service) Register(req RegisterRequest) error {
 		return err
 	}
 
-	token := uuid.NewString()
 	user := model.User{
-		Username:          req.Username,
-		Email:             req.Email,
-		Password:          string(hash),
-		VerificationToken: token,
+		Username: data.Username,
+		Email:    data.Email,
+		Password: string(hash),
 	}
 
 	return s.Repo.Create(user)
 }
 
-func (s *Service) Login(req LoginRequest) error {
+func (s *Service) Login(req model.LoginRequest) error {
 
 	user, err := s.Repo.FindByUsername(req.Username)
 
@@ -89,7 +165,7 @@ func (s *Service) Login(req LoginRequest) error {
 
 		otp := GenerateOTP()
 
-		err = s.Repo.CreateOTP(
+		err = s.Repo.CreateOTPLogin(
 			user.ID,
 			otp,
 		)
@@ -124,8 +200,8 @@ func GenerateOTP() string {
 	return fmt.Sprintf("%06d", rand.Intn(1000000))
 }
 
-func (s *Service) VerifyOTP(
-	req VerifyOTPRequest,
+func (s *Service) VerifyOTPLogin(
+	req model.VerifyOTPRequestLogin,
 ) error {
 
 	user, err := s.Repo.FindByUsername(
@@ -136,7 +212,7 @@ func (s *Service) VerifyOTP(
 		return errors.New("username not found")
 	}
 
-	valid, err := s.Repo.VerifyOTP(
+	valid, err := s.Repo.VerifyOTPLogin(
 		user.ID,
 		req.OTP,
 	)
