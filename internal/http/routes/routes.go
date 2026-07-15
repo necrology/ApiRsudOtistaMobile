@@ -1,11 +1,14 @@
 package routes
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"apirusdotistamobile/internal/auth"
 	"apirusdotistamobile/internal/config"
 	"apirusdotistamobile/internal/http/handlers"
+	authmiddleware "apirusdotistamobile/internal/http/middleware"
 	"apirusdotistamobile/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,21 +19,20 @@ func Register(
 	db *sql.DB,
 	cfg config.Config,
 ) {
-
-	repo := repository.NewResourceRepository(
-		db,
-		cfg.Database.Name,
-	)
-
-	// auth
 	authRepo := repository.NewAuthRepository(db)
-
 	authService := auth.NewService(
 		authRepo,
 		cfg.SMTP,
 	)
-
-	authHandler := handlers.NewAuthHandler(authService)
+	sessionRepo := repository.NewSessionUserMobileRepository(db)
+	sessionService := auth.NewSessionService(sessionRepo)
+	requireSession := authmiddleware.RequireSession(sessionService)
+	authHandler := handlers.NewAuthHandler(authService, sessionService)
+	app.Hooks().OnShutdown(func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+		defer cancel()
+		return authService.Close(ctx)
+	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Redirect("/api/v1/health")
@@ -41,15 +43,18 @@ func Register(
 	healthHandler := handlers.NewHealthHandler(db)
 	v1.Get("/health", healthHandler.Check)
 
-	tableHandler := handlers.NewTableHandler(repo)
+	mobilePatientRepo := repository.NewMobilePatientRepository(db)
+	mobilePatientHandler := handlers.NewMobilePatientHandler(mobilePatientRepo)
+	hospitalRepo := repository.NewHospitalRepository(db)
+	hospitalHandler := handlers.NewHospitalHandler(hospitalRepo)
+	holidayRepo := repository.NewHolidayRepository(db, cfg.Holiday)
+	bookingRepo := repository.NewBookingRepository(db, holidayRepo)
+	bookingHandler := handlers.NewBookingHandler(bookingRepo, holidayRepo)
 
-	v1.Get("/tables", tableHandler.Tables)
-	v1.Get("/tables/:table/search", tableHandler.Search)
-	v1.Get("/tables/:table", tableHandler.TableInfo)
-
-	v1.Get("/:table/search", tableHandler.Search)
-	v1.Get("/:table", tableHandler.Search)
-	v1.Get("/:table/:id", tableHandler.Detail)
-
-	AuthRoutes(v1, authHandler)
+	// Route database generik sengaja tidak diregistrasikan. Seluruh resource
+	// publik harus memakai handler dengan proyeksi kolom yang eksplisit.
+	MobilePatientRoutes(v1, mobilePatientHandler, requireSession)
+	HospitalRoutes(v1, hospitalHandler)
+	BookingRoutes(v1, bookingHandler, requireSession)
+	AuthRoutes(v1, authHandler, requireSession)
 }

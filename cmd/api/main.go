@@ -14,12 +14,18 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if err := cfg.ValidateRuntime(); err != nil {
+		log.Fatalf("invalid runtime configuration: %v", err)
+	}
 
 	db, err := database.Connect(cfg.Database)
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 	defer db.Close()
+	if err = database.ValidateAuthSchema(db, cfg.Database.Name); err != nil {
+		log.Fatalf("auth schema is not ready; run the documented migration first: %v", err)
+	}
 
 	app := server.New(cfg, db)
 	addr := ":" + cfg.App.Port

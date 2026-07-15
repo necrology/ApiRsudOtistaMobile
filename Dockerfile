@@ -19,6 +19,7 @@ RUN addgroup -S app && adduser -S app -G app \
 WORKDIR /app
 
 COPY --from=builder /out/api /app/api
+COPY --from=builder /src/assets /app/assets
 
 USER app
 

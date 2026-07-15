@@ -2,8 +2,10 @@ package server
 
 import (
 	"database/sql"
+	"time"
 
 	"apirusdotistamobile/internal/config"
+	authmiddleware "apirusdotistamobile/internal/http/middleware"
 	"apirusdotistamobile/internal/http/response"
 	"apirusdotistamobile/internal/http/routes"
 
@@ -16,11 +18,21 @@ import (
 func New(cfg config.Config, db *sql.DB) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:      cfg.App.Name,
+		BodyLimit:    1 * 1024 * 1024,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 		ErrorHandler: errorHandler,
 	})
 
 	app.Use(recover.New())
-	app.Use(cors.New())
+	app.Use(authmiddleware.SecurityHeaders)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "GET,POST,OPTIONS",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		MaxAge:       600,
+	}))
 	app.Use(logger.New(logger.Config{
 		Format: "${time} ${status} - ${latency} ${method} ${path}\n",
 	}))

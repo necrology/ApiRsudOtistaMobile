@@ -1,0 +1,3 @@
+SELECT 'pasiens' AS table_name, COUNT(*) AS total_rows, COUNT(DISTINCT id) AS distinct_id, COUNT(DISTINCT no_rm) AS distinct_no_rm, SUM(no_rm IS NULL OR no_rm = '') AS empty_no_rm, COUNT(DISTINCT nik) AS distinct_nik, SUM(nik IS NULL OR nik = '') AS empty_nik FROM pasiens;
+SELECT 'registrasis' AS table_name, COUNT(*) AS total_rows, COUNT(DISTINCT id) AS distinct_id, COUNT(DISTINCT pasien_id) AS distinct_pasien_id, SUM(pasien_id IS NULL OR pasien_id = 0) AS empty_pasien_id FROM registrasis;
+SELECT 'user_mobile' AS table_name, COUNT(*) AS total_rows, COUNT(DISTINCT patient_id) AS distinct_patient_id, SUM(patient_id IS NULL OR patient_id = 0) AS empty_patient_id, COUNT(DISTINCT no_rm) AS distinct_no_rm, SUM(no_rm IS NULL OR no_rm = '') AS empty_no_rm FROM user;

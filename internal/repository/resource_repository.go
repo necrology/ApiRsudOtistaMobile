@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -518,13 +519,26 @@ func normalizeSQLValue(value any) any {
 	case nil:
 		return nil
 	case []byte:
-		return string(typed)
+		return normalizeDisplayString(string(typed))
 	case time.Time:
 		return typed.Format(time.RFC3339)
+	case string:
+		return normalizeDisplayString(typed)
 	default:
 		return typed
 	}
 }
+
+func normalizeDisplayString(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" || trimmed == "null" {
+		return ""
+	}
+
+	return timePattern.ReplaceAllString(trimmed, `${1}:${2}`)
+}
+
+var timePattern = regexp.MustCompile(`(\d{2}):(\d{2}):(\d{2})`)
 
 func cloneTableInfo(table TableInfo) TableInfo {
 	cloned := table
