@@ -41,8 +41,10 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return handleAuthError(c, err, fiber.StatusBadRequest, "gagal memproses registrasi")
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "otp terkirim ke email, silahkan cek email untuk verifikasi",
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"success": true,
+		"code":    "registration_accepted",
+		"message": "Permintaan registrasi diterima. OTP akan dikirim ke email.",
 	})
 }
 
@@ -310,6 +312,13 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 }
 
 func handleAuthError(c *fiber.Ctx, err error, clientStatus int, fallback string) error {
+	if errors.Is(err, auth.ErrAccountAlreadyRegistered) {
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"success": false,
+			"code":    "account_already_registered",
+			"message": "Akun dengan email tersebut sudah terdaftar.",
+		})
+	}
 	if message, ok := auth.ClientErrorMessage(err); ok {
 		return response.Error(c, clientStatus, message)
 	}

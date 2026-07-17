@@ -37,8 +37,8 @@ func SendOTPEmailWithPurpose(
 
 	m := gomail.NewMessage()
 
-	m.SetHeader("From", cfg.Email)
-	m.SetHeader("To", to)
+	m.SetHeader("From", strings.TrimSpace(cfg.Email))
+	m.SetHeader("To", strings.TrimSpace(to))
 	m.SetHeader("Subject", subject)
 
 	body := fmt.Sprintf(`
@@ -66,9 +66,17 @@ func SendOTPEmailWithPurpose(
 	d := gomail.NewDialer(
 		strings.TrimSpace(cfg.Host),
 		port,
-		cfg.Email,
-		cfg.Password,
+		strings.TrimSpace(cfg.Email),
+		normalizeSMTPPassword(cfg.Host, cfg.Password),
 	)
 
 	return d.DialAndSend(m)
+}
+
+func normalizeSMTPPassword(host string, password string) string {
+	password = strings.TrimSpace(password)
+	if strings.EqualFold(strings.TrimSpace(host), "smtp.gmail.com") {
+		return strings.Join(strings.Fields(password), "")
+	}
+	return password
 }

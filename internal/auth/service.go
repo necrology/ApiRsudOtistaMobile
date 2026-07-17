@@ -25,6 +25,8 @@ type Service struct {
 
 var errInvalidLoginCredentials = errors.New("email atau password tidak sesuai")
 
+var ErrAccountAlreadyRegistered = errors.New("account already registered")
+
 const dummyPasswordHash = "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi."
 
 func NewService(
@@ -81,7 +83,10 @@ func (s *Service) RegisterUser(
 	}
 
 	if existingEmail != nil {
-		return consumeDummyOTPWork()
+		if err := consumeDummyOTPWork(); err != nil {
+			return err
+		}
+		return ErrAccountAlreadyRegistered
 	}
 
 	otp, err := GenerateOTP()
