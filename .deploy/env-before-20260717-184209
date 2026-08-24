@@ -1,0 +1,15 @@
+APP_NAME=ApiRsudOtistaMobile
+APP_ENV=development
+APP_PORT=8081
+
+DB_HOST=otista2-mysql
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=qwerty@123
+DB_NAME=rsud_otista
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+
+SMTP_EMAIL=ferybayuajim3@gmail.com
+SMTP_PASSWORD=knyk stow sxvs etov
