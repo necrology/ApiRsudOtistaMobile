@@ -167,7 +167,7 @@ Makna field penting:
 ```http
 POST /api/v1/mobile/booking/general
 Content-Type: application/json
-Authorization: Bearer <access_token>
+Authorization: Bearer REPLACE_ME # gitleaks:allow
 ```
 
 Body:
@@ -246,7 +246,7 @@ Validasi penting:
 
 ```http
 GET /api/v1/mobile/booking/general/mine
-Authorization: Bearer <access_token>
+Authorization: Bearer REPLACE_ME # gitleaks:allow
 ```
 
 Query parameter:
@@ -261,7 +261,7 @@ Query parameter:
 Contoh:
 
 ```bash
-curl -H "Authorization: Bearer ACCESS_TOKEN_UJI" \
+curl -H "Authorization: Bearer REPLACE_ME" \ # gitleaks:allow
   "http://127.0.0.1:8080/api/v1/mobile/booking/general/mine?all_dates=1&limit=30"
 ```
 

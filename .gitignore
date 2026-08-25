@@ -5,3 +5,10 @@
 /bin/
 vendor/
 docker/mysql/init/*.sql
+
+# Local deployment snapshots and data backups
+.local-sensitive-backups/
+.deploy/env-before-*
+.deploy/*before*
+.deploy/*.tar.gz
+backups/

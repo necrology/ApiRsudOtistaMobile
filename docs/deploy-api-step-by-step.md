@@ -347,7 +347,7 @@ curl "http://127.0.0.1:8080/api/v1/mobile/booking/calendar?year=2026&month=6&pol
 Cek history nomor antrian pasien dengan access token akun uji:
 
 ```bash
-curl -H "Authorization: Bearer ACCESS_TOKEN_UJI" \
+curl -H "Authorization: Bearer REPLACE_ME" \ # gitleaks:allow
   "http://127.0.0.1:8080/api/v1/mobile/booking/general/mine?all_dates=1&limit=5"
 ```
 
