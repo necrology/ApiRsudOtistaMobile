@@ -26,6 +26,10 @@ var requiredAuthColumns = map[string][]string{
 		"id", "user_id", "otp_code", "otp_hash", "attempt_count", "last_attempt_at",
 		"locked_at", "used_at", "expired_at", "is_used", "created_at",
 	},
+	"otp_account_deletion_mobile": {
+		"id", "user_id", "otp_code", "otp_hash", "attempt_count", "last_attempt_at",
+		"locked_at", "used_at", "expired_at", "is_used", "created_at",
+	},
 	"otp_medical_record_claim_mobile": {
 		"id", "user_id", "patient_id", "no_rm", "patient_name", "otp_code",
 		"otp_hash", "attempt_count", "last_attempt_at", "locked_at", "used_at",
@@ -71,7 +75,8 @@ func ValidateAuthSchema(db *sql.DB, schema string) error {
 		WHERE TABLE_SCHEMA = ?
 		AND TABLE_NAME IN (
 			'user_mobile', 'otp_user_mobile', 'otp_verif_email_mobile',
-			'otp_password_reset_mobile', 'otp_medical_record_claim_mobile',
+			'otp_password_reset_mobile', 'otp_account_deletion_mobile',
+			'otp_medical_record_claim_mobile',
 			'session_user_mobile', 'auth_ticket_mobile'
 		)
 	`, schema)
@@ -102,7 +107,8 @@ func ValidateAuthSchema(db *sql.DB, schema string) error {
 		WHERE TABLE_SCHEMA = ?
 		AND TABLE_NAME IN (
 			'user_mobile', 'otp_user_mobile', 'otp_verif_email_mobile',
-			'otp_password_reset_mobile', 'otp_medical_record_claim_mobile',
+			'otp_password_reset_mobile', 'otp_account_deletion_mobile',
+			'otp_medical_record_claim_mobile',
 			'session_user_mobile', 'auth_ticket_mobile'
 		)
 	`, schema)

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Permintaan penghapusan akun SIPANTES RSUD Oto Iskandar Di Nata Kabupaten Bandung.">
+  <title>Penghapusan Akun SIPANTES</title>
+  <link rel="stylesheet" href="/legal/assets/legal.css">
+  <script src="/legal/assets/account-deletion.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <p class="meta">Layanan akun SIPANTES</p>
+      <h1>Penghapusan Akun</h1>
+      <p>Halaman ini disediakan oleh RSUD Oto Iskandar Di Nata Kabupaten Bandung untuk pengguna yang ingin menghapus akun SIPANTES tanpa harus membuka aplikasi.</p>
+    </header>
+
+    <section class="card">
+      <h2>Data yang Dihapus</h2>
+      <p>Setelah verifikasi berhasil, identitas akun, hubungan akun dengan nomor rekam medis, kredensial, OTP, tiket autentikasi, dan seluruh sesi login SIPANTES akan dihapus atau dianonimkan.</p>
+      <div class="notice">
+        Rekam medis dan catatan pelayanan rumah sakit tidak ikut dihapus. Data tersebut dapat dipertahankan untuk keselamatan pasien, pemenuhan kewajiban hukum, audit, dan kebijakan retensi rumah sakit. Penghapusan akun juga tidak membatalkan pendaftaran atau layanan yang sedang diproses.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Langkah 1: Minta OTP Penghapusan</h2>
+      <p>Masukkan email akun dan password. OTP enam digit akan dikirim ke email terdaftar dan berlaku selama lima menit.</p>
+      <form id="request-form">
+        <label for="request-identifier">Email akun</label>
+        <input id="request-identifier" name="identifier" type="email" autocomplete="username" maxlength="100" required>
+        <label for="request-password">Password</label>
+        <input id="request-password" name="password" type="password" autocomplete="current-password" maxlength="72" required>
+        <button type="submit">Kirim OTP Penghapusan</button>
+        <div id="request-status" class="status" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Langkah 2: Konfirmasi Penghapusan</h2>
+      <p>Tindakan ini tidak dapat dibatalkan. Setelah akun dihapus, Anda akan keluar dari seluruh perangkat dan dapat membuat akun baru apabila kembali menggunakan SIPANTES.</p>
+      <form id="confirm-form">
+        <label for="confirm-identifier">Email akun</label>
+        <input id="confirm-identifier" name="identifier" type="email" autocomplete="username" maxlength="100" required>
+        <label for="confirm-otp">OTP enam digit</label>
+        <input id="confirm-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button class="danger-button" type="submit">Hapus Akun Secara Permanen</button>
+        <div id="confirm-status" class="status" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Butuh Bantuan?</h2>
+      <p>Email <a href="mailto:rsudotista@bandungkab.go.id">rsudotista@bandungkab.go.id</a> atau hubungi <a href="tel:+62225891355">(022) 5891355</a>. Baca juga <a href="/privacy-policy">Kebijakan Privasi SIPANTES</a>.</p>
+    </section>
+
+    <footer>SIPANTES · RSUD Oto Iskandar Di Nata Kabupaten Bandung</footer>
+  </main>
+</body>
+</html>

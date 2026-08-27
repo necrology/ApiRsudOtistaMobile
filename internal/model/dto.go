@@ -52,6 +52,18 @@ type ResetPasswordRequest struct {
 	Password   string
 }
 
+type RequestAccountDeletion struct {
+	Identifier string `json:"identifier"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+}
+
+type ConfirmAccountDeletion struct {
+	Identifier string `json:"identifier"`
+	Email      string `json:"email"`
+	OTP        string `json:"otp"`
+}
+
 type RequestMedicalRecordClaim struct {
 	Password  string
 	NoRM      string

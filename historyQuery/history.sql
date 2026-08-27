@@ -543,3 +543,27 @@ ALTER TABLE `otp_medical_record_claim_mobile`
 
 ALTER TABLE `otp_medical_record_claim_mobile`
     ADD COLUMN `used_at` DATETIME(6) NULL DEFAULT NULL AFTER `locked_at`;
+
+-- ============================================================
+-- 2026-08-27: OTP penghapusan akun SIPANTES OTISTA
+-- ============================================================
+-- Backup tabel auth mobile sebelum migrasi. Tabel ini hanya menyimpan OTP
+-- ter-hash untuk konfirmasi penghapusan akun dan tidak menyimpan rekam medis.
+
+CREATE TABLE IF NOT EXISTS `otp_account_deletion_mobile` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT NOT NULL,
+    `otp_code` VARCHAR(10) NOT NULL,
+    `otp_hash` VARCHAR(255) NULL,
+    `attempt_count` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    `last_attempt_at` DATETIME(6) NULL DEFAULT NULL,
+    `locked_at` DATETIME(6) NULL DEFAULT NULL,
+    `used_at` DATETIME(6) NULL DEFAULT NULL,
+    `expired_at` TIMESTAMP NOT NULL,
+    `is_used` BOOLEAN DEFAULT FALSE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_otp_account_deletion_user_mobile`
+        FOREIGN KEY (`user_id`) REFERENCES `user_mobile` (`id`) ON DELETE CASCADE,
+    KEY `idx_otp_account_deletion_user_used_expired`
+        (`user_id`, `is_used`, `expired_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -619,6 +619,127 @@ func (r *AuthRepository) CreatePasswordResetOTP(
 	return createUserOTPChallenge(r.DB, "otp_password_reset_mobile", userID, otpHash)
 }
 
+func (r *AuthRepository) CreateAccountDeletionOTP(
+	userID int64,
+	otpHash string,
+) error {
+	return createUserOTPChallenge(r.DB, "otp_account_deletion_mobile", userID, otpHash)
+}
+
+func (r *AuthRepository) DeleteAccount(
+	userID int64,
+	otp string,
+) (bool, error) {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	var deletionID int64
+	var otpHash string
+	var legacyOTP string
+	var attemptCount int
+	var email string
+	if err = tx.QueryRow(`
+		SELECT d.id, COALESCE(d.otp_hash, ''), d.otp_code, d.attempt_count, u.email
+		FROM otp_account_deletion_mobile d
+		INNER JOIN user_mobile u ON u.id = d.user_id
+		WHERE d.user_id = ?
+		AND d.is_used = FALSE
+		AND d.expired_at > NOW()
+		AND d.locked_at IS NULL
+		AND COALESCE(u.is_deleted, FALSE) = FALSE
+		ORDER BY d.id DESC
+		LIMIT 1
+		FOR UPDATE
+	`, userID).Scan(
+		&deletionID,
+		&otpHash,
+		&legacyOTP,
+		&attemptCount,
+		&email,
+	); err != nil {
+		return false, err
+	}
+
+	storedOTP := otpHash
+	if storedOTP == "" {
+		storedOTP = legacyOTP
+	}
+	if !verifyStoredOTP(storedOTP, strings.TrimSpace(otp)) {
+		if _, err = tx.Exec(`
+			UPDATE otp_account_deletion_mobile
+			SET attempt_count = attempt_count + 1,
+				last_attempt_at = NOW(),
+				locked_at = CASE
+					WHEN attempt_count + 1 >= ? THEN NOW()
+					ELSE locked_at
+				END
+			WHERE id = ?
+		`, maxOTPVerificationAttempts, deletionID); err != nil {
+			return false, err
+		}
+		if err = tx.Commit(); err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+
+	if _, err = tx.Exec(`DELETE FROM auth_ticket_mobile WHERE email = ?`, email); err != nil {
+		return false, err
+	}
+	if _, err = tx.Exec(`DELETE FROM otp_verif_email_mobile WHERE email = ?`, email); err != nil {
+		return false, err
+	}
+	for _, table := range []string{
+		"otp_user_mobile",
+		"otp_password_reset_mobile",
+		"otp_medical_record_claim_mobile",
+		"session_user_mobile",
+		"otp_account_deletion_mobile",
+	} {
+		if _, err = tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE user_id = ?`, table), userID); err != nil {
+			return false, err
+		}
+	}
+
+	result, err := tx.Exec(`
+		UPDATE user_mobile
+		SET username = CONCAT('deleted-', id),
+			email = CONCAT('deleted+', id, '@invalid.local'),
+			no_rm = NULL,
+			patient_id = NULL,
+			phone = NULL,
+			full_name = NULL,
+			password = '',
+			email_verified = FALSE,
+			verification_token = NULL,
+			verified_at = NULL,
+			medical_record_verified_at = NULL,
+			is_deleted = TRUE,
+			deleted_at = NOW(),
+			updated_at = NOW()
+		WHERE id = ?
+		AND COALESCE(is_deleted, FALSE) = FALSE
+	`, userID)
+	if err != nil {
+		return false, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if rowsAffected != 1 {
+		return false, sql.ErrNoRows
+	}
+
+	if err = tx.Commit(); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *AuthRepository) ResetPassword(
 	userID int64,
 	otp string,

@@ -191,6 +191,77 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	})
 }
 
+func (h *AuthHandler) RequestAccountDeletion(c *fiber.Ctx) error {
+	principal, ok := authmiddleware.PrincipalFromContext(c)
+	if !ok {
+		return response.Error(c, fiber.StatusUnauthorized, "autentikasi diperlukan")
+	}
+
+	var req model.RequestAccountDeletion
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+	if err := h.Service.RequestAccountDeletion(principal.UserID, req.Password); err != nil {
+		return handleAuthError(c, err, fiber.StatusUnauthorized, "gagal memproses penghapusan akun")
+	}
+
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"success": true,
+		"message": "OTP penghapusan akun telah dikirim ke email terdaftar.",
+	})
+}
+
+func (h *AuthHandler) ConfirmAccountDeletion(c *fiber.Ctx) error {
+	principal, ok := authmiddleware.PrincipalFromContext(c)
+	if !ok {
+		return response.Error(c, fiber.StatusUnauthorized, "autentikasi diperlukan")
+	}
+
+	var req model.ConfirmAccountDeletion
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+	if err := h.Service.ConfirmAccountDeletion(principal.UserID, req.OTP); err != nil {
+		return handleAuthError(c, err, fiber.StatusBadRequest, "gagal menghapus akun")
+	}
+
+	return response.OK(c, accountDeletionResponse())
+}
+
+func (h *AuthHandler) RequestAccountDeletionWeb(c *fiber.Ctx) error {
+	var req model.RequestAccountDeletion
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+	if err := h.Service.RequestAccountDeletionByCredentials(req); err != nil {
+		return handleAuthError(c, err, fiber.StatusUnauthorized, "gagal memproses penghapusan akun")
+	}
+
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"success": true,
+		"message": "OTP penghapusan akun telah dikirim ke email terdaftar.",
+	})
+}
+
+func (h *AuthHandler) ConfirmAccountDeletionWeb(c *fiber.Ctx) error {
+	var req model.ConfirmAccountDeletion
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+	if err := h.Service.ConfirmAccountDeletionByIdentifier(req); err != nil {
+		return handleAuthError(c, err, fiber.StatusBadRequest, "gagal menghapus akun")
+	}
+
+	return response.OK(c, accountDeletionResponse())
+}
+
+func accountDeletionResponse() fiber.Map {
+	return fiber.Map{
+		"message":       "Akun SIPANTES berhasil dihapus.",
+		"retained_data": "Rekam medis dan catatan pelayanan rumah sakit tidak ikut dihapus karena dikelola sebagai dokumen pelayanan kesehatan.",
+	}
+}
+
 func (h *AuthHandler) RequestMedicalRecordClaim(c *fiber.Ctx) error {
 	principal, ok := authmiddleware.PrincipalFromContext(c)
 	if !ok {

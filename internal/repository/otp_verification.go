@@ -13,7 +13,7 @@ const maxOTPVerificationAttempts = 5
 
 func createUserOTPChallenge(db *sql.DB, table string, userID int64, otpHash string) error {
 	switch table {
-	case "otp_user_mobile", "otp_password_reset_mobile":
+	case "otp_user_mobile", "otp_password_reset_mobile", "otp_account_deletion_mobile":
 	default:
 		return fmt.Errorf("unsupported otp table %q", table)
 	}

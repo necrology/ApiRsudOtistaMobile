@@ -37,6 +37,11 @@ func Register(
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Redirect("/api/v1/health")
 	})
+	app.Get("/privacy-policy", handlers.PrivacyPolicyPage)
+	app.Get("/kebijakan-privasi", handlers.PrivacyPolicyPage)
+	app.Get("/account-deletion", handlers.AccountDeletionPage)
+	app.Get("/hapus-akun", handlers.AccountDeletionPage)
+	app.Get("/legal/assets/:name", handlers.PublicPageAsset)
 
 	v1 := app.Group("/api/v1")
 

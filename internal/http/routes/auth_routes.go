@@ -25,6 +25,8 @@ func AuthRoutes(
 	auth.Post("/set-password", authmiddleware.GlobalRateLimit(60, time.Minute), authmiddleware.RateLimit(10, time.Minute, "registration_ticket"), limitAuthWork, authHandler.SetPassword)
 	auth.Post("/forgot-password", authmiddleware.GlobalRateLimit(30, time.Minute), authmiddleware.RateLimit(5, time.Minute, "identifier", "email"), limitAuthWork, authHandler.ForgotPassword)
 	auth.Post("/reset-password", authmiddleware.GlobalRateLimit(60, time.Minute), authmiddleware.RateLimit(10, time.Minute, "identifier", "email"), limitAuthWork, authHandler.ResetPassword)
+	auth.Post("/account-deletion/web/request", authmiddleware.GlobalRateLimit(30, time.Minute), authmiddleware.RateLimit(5, 15*time.Minute, "identifier", "email"), limitAuthWork, authHandler.RequestAccountDeletionWeb)
+	auth.Post("/account-deletion/web/confirm", authmiddleware.GlobalRateLimit(60, time.Minute), authmiddleware.RateLimit(10, 15*time.Minute, "identifier", "email"), limitAuthWork, authHandler.ConfirmAccountDeletionWeb)
 	auth.Post("/refresh", authmiddleware.GlobalRateLimit(300, time.Minute), authmiddleware.RateLimit(30, time.Minute, "refresh_token"), limitAuthWork, authHandler.RefreshSession)
 	// Endpoint token verifikasi legacy dipensiunkan; OTP adalah satu-satunya
 	// jalur verifikasi email yang aktif.
@@ -37,4 +39,6 @@ func AuthRoutes(
 	protected.Post("/logout", authHandler.Logout)
 	protected.Post("/medical-record/request", authmiddleware.GlobalRateLimit(30, time.Minute), authmiddleware.RateLimit(5, 5*time.Minute), limitAuthWork, authHandler.RequestMedicalRecordClaim)
 	protected.Post("/medical-record/confirm", authmiddleware.GlobalRateLimit(60, time.Minute), authmiddleware.RateLimit(10, 5*time.Minute), limitAuthWork, authHandler.ConfirmMedicalRecordClaim)
+	protected.Post("/account-deletion/request", authmiddleware.GlobalRateLimit(30, time.Minute), authmiddleware.RateLimit(5, 15*time.Minute), limitAuthWork, authHandler.RequestAccountDeletion)
+	protected.Post("/account-deletion/confirm", authmiddleware.GlobalRateLimit(60, time.Minute), authmiddleware.RateLimit(10, 15*time.Minute), limitAuthWork, authHandler.ConfirmAccountDeletion)
 }

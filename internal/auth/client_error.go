@@ -35,4 +35,5 @@ var safeClientErrorMessages = map[string]struct{}{
 	"akun belum valid untuk mengubah no rm":                  {},
 	"data rekam medis tidak cocok atau tidak bisa digunakan": {},
 	"otp klaim no rm tidak valid":                            {},
+	"otp penghapusan akun tidak valid":                       {},
 }

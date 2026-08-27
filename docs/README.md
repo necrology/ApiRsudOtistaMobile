@@ -14,6 +14,7 @@ API RSUD Otista Mobile menggunakan Go Fiber dan MySQL.
 - [`docs/mobile-auth-security-deployment.md`](mobile-auth-security-deployment.md): runbook migrasi dan deployment hardening autentikasi/session mobile.
 - `docs/api-docker-deploy.md`: panduan deploy API dengan Docker, versi stack, env, dan endpoint verifikasi.
 - `docs/deploy-api-step-by-step.md`: panduan deploy API ke server dengan bahasa langkah demi langkah untuk operator.
+- [`docs/privacy-account-deletion.md`](privacy-account-deletion.md): kontrak kebijakan privasi, penghapusan akun, migrasi, dan smoke test.
 
 ## Database Produksi
 
@@ -116,12 +117,18 @@ POST /api/v1/auth/set-password
 POST /api/v1/auth/forgot-password
 POST /api/v1/auth/reset-password
 POST /api/v1/auth/refresh
+POST /api/v1/auth/account-deletion/web/request
+POST /api/v1/auth/account-deletion/web/confirm
+GET  /privacy-policy
+GET  /account-deletion
 
 # Wajib Authorization: Bearer <access_token>
 GET  /api/v1/auth/me
 POST /api/v1/auth/logout
 POST /api/v1/auth/medical-record/request
 POST /api/v1/auth/medical-record/confirm
+POST /api/v1/auth/account-deletion/request
+POST /api/v1/auth/account-deletion/confirm
 POST /api/v1/mobile/booking/general
 GET  /api/v1/mobile/booking/general/mine
 GET  /api/v1/mobile/patient/profile
@@ -137,7 +144,7 @@ Route tabel generik (`/tables`, `/:table`, search, dan detail) serta `GET /mobil
 
 ## Deploy Produksi
 
-Untuk binary dengan Bearer session, OTP bcrypt, dan `registration_ticket`, operator wajib mengikuti [runbook hardening auth](mobile-auth-security-deployment.md). Urutan amannya adalah backup, terapkan bagian DDL 2026-07-15 dari `historyQuery/history.sql`, deploy binary, lalu jalankan smoke test. API produksi menolak akun runtime `root`, konfigurasi DB/SMTP yang belum lengkap, dan skema auth parsial saat startup. Perubahan source ini tidak mengubah Cloudflare atau konfigurasi server.
+Untuk binary dengan Bearer session, OTP bcrypt, `registration_ticket`, dan penghapusan akun, operator wajib mengikuti [runbook hardening auth](mobile-auth-security-deployment.md) serta [runbook penghapusan akun](privacy-account-deletion.md). Urutan amannya adalah backup, terapkan bagian DDL 2026-07-15 dan 2026-08-27 dari `historyQuery/history.sql`, deploy binary, lalu jalankan smoke test. API produksi menolak akun runtime `root`, konfigurasi DB/SMTP yang belum lengkap, dan skema auth parsial saat startup. Perubahan source ini tidak mengubah Cloudflare atau konfigurasi server.
 
 ### 1. Siapkan environment
 

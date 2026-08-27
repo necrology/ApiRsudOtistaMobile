@@ -380,6 +380,110 @@ func (s *Service) ResetPassword(req model.ResetPasswordRequest) error {
 	return nil
 }
 
+func (s *Service) RequestAccountDeletion(
+	userID int64,
+	password string,
+) error {
+	user, err := s.Repo.FindUserByID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			_ = bcrypt.CompareHashAndPassword([]byte(dummyPasswordHash), []byte(password))
+			return errInvalidLoginCredentials
+		}
+		return err
+	}
+
+	return s.requestAccountDeletion(user, password)
+}
+
+func (s *Service) RequestAccountDeletionByCredentials(
+	req model.RequestAccountDeletion,
+) error {
+	user, err := s.resolveLoginUser(req.Identifier, req.Email)
+	if err != nil {
+		if errors.Is(err, errInvalidLoginCredentials) {
+			_ = bcrypt.CompareHashAndPassword([]byte(dummyPasswordHash), []byte(req.Password))
+			return errInvalidLoginCredentials
+		}
+		return err
+	}
+
+	return s.requestAccountDeletion(user, req.Password)
+}
+
+func (s *Service) requestAccountDeletion(
+	user *model.User,
+	password string,
+) error {
+	if user == nil || bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(password),
+	) != nil {
+		return errInvalidLoginCredentials
+	}
+
+	otp, err := GenerateOTP()
+	if err != nil {
+		return err
+	}
+	otpHash, err := hashOTP(otp)
+	if err != nil {
+		return err
+	}
+	if err = s.Repo.CreateAccountDeletionOTP(user.ID, otpHash); err != nil {
+		return err
+	}
+
+	return s.enqueueOTPEmail(
+		user.Email,
+		otp,
+		"Konfirmasi Penghapusan Akun SIPANTES",
+		"menghapus akun SIPANTES",
+	)
+}
+
+func (s *Service) ConfirmAccountDeletion(
+	userID int64,
+	otp string,
+) error {
+	if userID <= 0 || !validOTPFormat(otp) {
+		return errors.New("otp penghapusan akun tidak valid")
+	}
+
+	deleted, err := s.Repo.DeleteAccount(userID, strings.TrimSpace(otp))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.New("otp penghapusan akun tidak valid")
+		}
+		return err
+	}
+	if !deleted {
+		return errors.New("otp penghapusan akun tidak valid")
+	}
+	return nil
+}
+
+func (s *Service) ConfirmAccountDeletionByIdentifier(
+	req model.ConfirmAccountDeletion,
+) error {
+	if !validOTPFormat(req.OTP) {
+		return errors.New("otp penghapusan akun tidak valid")
+	}
+
+	user, err := s.resolveLoginUser(req.Identifier, req.Email)
+	if err != nil {
+		if errors.Is(err, errInvalidLoginCredentials) {
+			if dummyErr := consumeDummyOTPWork(); dummyErr != nil {
+				return dummyErr
+			}
+			return errors.New("otp penghapusan akun tidak valid")
+		}
+		return err
+	}
+
+	return s.ConfirmAccountDeletion(user.ID, req.OTP)
+}
+
 func (s *Service) RequestMedicalRecordClaim(
 	userID int64,
 	req model.RequestMedicalRecordClaim,
